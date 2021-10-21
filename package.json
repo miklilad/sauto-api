@@ -1,0 +1,32 @@
+{
+  "name": "sauto-api2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "clean-up-build": "rm -rf dist",
+    "build": "yarn clean-up-build; tsc",
+    "build:prod": "yarn build",
+    "build:dev": "tsc --watch",
+    "test": "yarn build; mocha ./dist/**/*.spec.js --require source-map-support/register --timeout 1000000 --exit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miklilad/sauto-api.git"
+  },
+  "author": "miklilad",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/miklilad/sauto-api/issues"
+  },
+  "homepage": "https://github.com/miklilad/sauto-api#readme",
+  "devDependencies": {
+    "@types/md5": "^2.3.1",
+    "@types/xmlrpc": "^1.3.7",
+    "sauto-api": "^0.4.2"
+  },
+  "dependencies": {
+    "md5": "^2.3.0",
+    "xmlrpc": "^1.3.2"
+  }
+}
