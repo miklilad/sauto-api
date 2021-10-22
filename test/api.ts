@@ -20,9 +20,9 @@ describe('Sauto API tests', function () {
 
   describe('without login', function () {
 
-    it('should print version', function () {
+    it('should print version', async function () {
 
-      api
+      return api
         .version()
         .then(function (version) {
           expect(version).to.be.a('string');
@@ -30,13 +30,10 @@ describe('Sauto API tests', function () {
     });
 
 
-    it('should login and logout', function () {
+    it('should login and logout', async function () {
 
-      api
-        .login()
-        .then(function () {
-          return api.logout()
-        })
+      await api.login()
+      return api.logout()
     });
 
   });
@@ -53,8 +50,8 @@ describe('Sauto API tests', function () {
     });
 
 
-    it('should get list of cars', function () {
-      api
+    it('should get list of cars', async function () {
+      return api
         .listOfCars()
         .then(function (ids) {
           expect(ids).to.be.instanceOf(Array);
@@ -70,9 +67,9 @@ describe('Sauto API tests', function () {
         car = require(__dirname + '/data/car.js'),
         equips = [3, 4, 5, 6, 7, 8];
 
-      before(function () {
+      before(async function () {
 
-        api
+        return api
           .addEditCar(car)
           .then(function (result) {
             expect(result.error).to.be.false;
@@ -82,16 +79,16 @@ describe('Sauto API tests', function () {
       });
 
 
-      after(function () {
+      after(async function () {
 
-        api
+        return api
           .delCar(carId)
       });
 
 
-      it('should get a car', function () {
+      it('should get a car', async function () {
 
-        api
+        return api
           .getCar(carId)
           .then(function (result) {
             expect(result).to.be.an('Object');
@@ -99,11 +96,11 @@ describe('Sauto API tests', function () {
       });
 
 
-      it('should edit car', function () {
+      it('should edit car', async function () {
 
         car.car_id = carId;
 
-        api
+        return api
           .addEditCar(car)
           .then(function (result) {
             expect(result.error).to.be.false;
@@ -112,10 +109,10 @@ describe('Sauto API tests', function () {
       });
 
 
-      it('should get car id', function () {
+      it('should get car id', async function () {
         var car = require(__dirname + '/data/car.js');
 
-        api
+        return api
           .getCarId(car.custom_id)
           .then(function (result) {
             expect(result).to.be.equal(carId);
@@ -123,16 +120,16 @@ describe('Sauto API tests', function () {
       });
 
 
-      it('should add equipment', function () {
+      it('should add equipment', async function () {
 
-        api
+        return api
           .addEquipment(carId, equips)
       });
 
 
-      it('should get list of equipment', function () {
+      it('should get list of equipment', async function () {
 
-        api
+        return api
           .listOfEquipment(carId)
           .then(function (result) {
             expect(result).to.be.an('Array');
@@ -140,7 +137,7 @@ describe('Sauto API tests', function () {
       });
 
 
-      it('should insert new car with errors', function () {
+      it('should insert new car with errors', async function () {
 
         delete car.vin;
         delete car.custom_id;
@@ -149,7 +146,7 @@ describe('Sauto API tests', function () {
         delete car.model_id;
         delete car.manufacturer_id;
 
-        api
+        return api
           .addEditCar({})
           .catch(function (err) {
             expect(err.error).to.be.eql('Auto s neuplnym kind_id, manufacturer_id, model_id a body_id');
