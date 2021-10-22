@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   custom_id: '1234',
   kind_id: 1,
   manufacturer_id: 93,

@@ -8,7 +8,7 @@
     "build": "yarn clean-up-build; tsc",
     "build:prod": "yarn build",
     "build:dev": "tsc --watch",
-    "test": "yarn build; mocha ./dist/**/*.spec.js --require source-map-support/register --timeout 1000000 --exit"
+    "test": "yarn build; mocha ./dist/test/api.js --timeout 1000000 --exit"
   },
   "repository": {
     "type": "git",
@@ -21,8 +21,14 @@
   },
   "homepage": "https://github.com/miklilad/sauto-api#readme",
   "devDependencies": {
+    "@types/async": "^3.2.8",
+    "@types/chai": "^4.2.22",
     "@types/md5": "^2.3.1",
+    "@types/mocha": "^9.0.0",
     "@types/xmlrpc": "^1.3.7",
+    "async": "^3.2.1",
+    "chai": "^4.3.4",
+    "mocha": "^9.1.3",
     "sauto-api": "^0.4.2"
   },
   "dependencies": {

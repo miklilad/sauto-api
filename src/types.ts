@@ -21,11 +21,11 @@ export type SautoHash = SautoResponse & {
   }
 }
 
-export type CarData = {
-  address: string,
-  airbag: [],
-  aircondition: [],
-  attractive_offer: boolean,
-  beds: [],
-  body_id: [];
-}
+// export type CarData = {
+//   address: string,
+//   airbag: [],
+//   aircondition: [],
+//   attractive_offer: boolean,
+//   beds: [],
+//   body_id: [];
+// }
