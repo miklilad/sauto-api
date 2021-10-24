@@ -1,9 +1,6 @@
-import { ClientOptions, SautoHash, SautoResponse } from './types';
+import { ClientOptions, RepliesFiltter, Hash, PossibleErrorResponse } from './types';
 import xmlrpc from 'xmlrpc';
 import md5 from 'md5';
-
-const log = async (res) => {console.log(res); return res}
-
 
 export default class SautoApi {
   private _client: xmlrpc.Client
@@ -28,24 +25,24 @@ export default class SautoApi {
     return new Promise((resolve, reject) =>
       this._client.methodCall(functionName, args, (err, res) => {
         if (err) reject(err.toString())
-        if (res.status >= 400) reject(res.status_message)
+        if (res.status >= 400) reject(`(${res.status}) ${res.status_message}`)
         resolve(res)
-      }))
+      })
+    )
   }
 
-  private _getHash(): Promise<SautoHash> {
-    return this._sautoCall('getHash', [this._login])
+  private _getHash(): Promise<Hash> {
+    return this._sautoCall('getHash', [this._login]).then(res => res.output)
   }
 
-  async login(): Promise<SautoResponse> {
-    const hashPair = await this._getHash()
-    const { hash_key, session_id } = hashPair.output
+  async login(): Promise<Response> {
+    const { hash_key, session_id } = await this._getHash()
     const hashedPassword = md5(md5(this._password) + hash_key)
 
     return new Promise((resolve, reject) =>
       this._client.methodCall('login', [session_id, hashedPassword, this._swKey], (err, res) => {
         if (err) reject(err.toString())
-        if (res.status >= 400) reject(res.status_message)
+        if (res.status >= 400) reject(`(${res.status}) ${res.status_message}`)
         this._sessionId = session_id
         resolve(res)
       }))
@@ -56,140 +53,99 @@ export default class SautoApi {
       .then(res => res.output?.version)
   }
 
-  logout(): Promise<SautoResponse> {
+  logout(): Promise<PossibleErrorResponse> {
     this._checkLogin()
     return this._sautoCall('logout', [this._sessionId])
+      .then(res => res.output)
   }
 
   addEditCar(carData: Object): Promise<any> {
     this._checkLogin()
     return this._sautoCall('addEditCar', [this._sessionId, carData])
-    .then(res => res.output).then(log)
+      .then(res => res.output)
   }
 
-  getCar(carId: number) {
+  getCar(carId: number): Promise<any> {
     this._checkLogin()
     return this._sautoCall('getCar', [this._sessionId, carId])
+      .then(res => res.output)
   }
 
-  getCarId(customId: string) {
+  getCarId(customId: string): Promise<number> {
     this._checkLogin()
     return this._sautoCall('getCarId', [this._sessionId, customId])
+      .then(res => res.output?.car_id)
   }
 
-  delCar(carId: number) {
+  delCar(carId: number): Promise<PossibleErrorResponse> {
     this._checkLogin()
     return this._sautoCall('delCar', [this._sessionId, carId])
+      .then(res => res.output)
   }
 
-  listOfCars(imported?: string) {
+  listOfCars(imported?: string): Promise<any[]> {
     this._checkLogin()
     return this._sautoCall('listOfCars', [this._sessionId, imported])
-    .then(res => Object.values(res.output?.list_of_cars || {}))
+      .then(res => Object.values(res.output?.list_of_cars || {}))
   }
 
-  topCars(carIds: number[]) {
+  topCars(carIds: number[]): Promise<PossibleErrorResponse> {
     this._checkLogin()
     return this._sautoCall('topCars', [this._sessionId, carIds])
+      .then(res => res.output)
   }
 
-  addEditPhoto(carId: number, photoData: Object) {
+  addEditPhoto(carId: number, photoData: Object): Promise<any> {
     this._checkLogin()
     return this._sautoCall('addEditPhoto', [this._sessionId, carId, photoData])
+      .then(res => res.output)
   }
 
-  delPhoto(photoId: number) {
+  delPhoto(photoId: number): Promise<PossibleErrorResponse> {
     this._checkLogin()
     return this._sautoCall('delPhoto', [this._sessionId, photoId])
+      .then(res => res.output)
   }
 
-  getPhotoId(carId: number, clientPhotoId: string) {
+  getPhotoId(carId: number, clientPhotoId: string): Promise<number> {
     this._checkLogin()
     return this._sautoCall('getPhotoId', [this._sessionId, carId, clientPhotoId])
+      .then(res => res.output?.photo_id)
   }
 
-  listOfPhotos(carId: number) {
+  listOfPhotos(carId: number): Promise<any[]> {
     this._checkLogin()
     return this._sautoCall('listOfPhotos', [this._sessionId, carId])
+      .then(res => Object.values(res.output?.list_of_photos || {}))
   }
 
-  addEquipment(carId: number, equipment: number[]) {
+  addEquipment(carId: number, equipment: number[]): Promise<any> {
     this._checkLogin()
     return this._sautoCall('addEquipment', [this._sessionId, carId, equipment])
+      .then(res => res.output)
   }
 
-  listOfEquipment(carId: number) {
+  listOfEquipment(carId: number): Promise<any[]>  {
     this._checkLogin()
     return this._sautoCall('listOfEquipment', [this._sessionId, carId])
+      .then(res => Object.values(res.output?.equipment || {}))
   }
 
-  addVideo(carId: number, videoData: Object) {
+  addVideo(carId: number, videoData: Object): Promise<any> {
     this._checkLogin()
     return this._sautoCall('addVideo', [this._sessionId, carId, videoData])
+      .then(res => res.output)
   }
 
-  delVideo(carId: number) {
+  delVideo(carId: number): Promise<PossibleErrorResponse> {
     this._checkLogin()
     return this._sautoCall('delVideo', [this._sessionId, carId])
+      .then(res => res.output)
   }
 
-  getReplies(filters: Object, offset: number, limit: number) {
+  getReplies(filters: RepliesFiltter, offset: number, limit: number): Promise<any[]> {
     this._checkLogin()
     return this._sautoCall('getReplies', [this._sessionId, filters, offset, limit])
+      .then(res => Object.values(res.output?.replies || {}))
   }
 }
-
-// var login = 'import',
-//   password = 'test',
-//   swKey = 'testkey-571769',
-//   config = {
-//     "host": "import.sauto.cz",
-//     "port": 80,
-//     "path": "/RPC2"
-//   };
-
-const car = {
-  custom_id: '1234',
-  kind_id: 1,
-  manufacturer_id: 93,
-  model_id: 708,
-  body_id: 6,
-  car_status: 1,
-  vin: 'YS3FH56U671259941',
-  state_id: 10,
-  fuel: 1,
-  tachometr: 10,
-  tachometr_unit: 1,
-  condition: 1,
-  price: 759000,
-  engine_volume: 1968,
-  dph: 1,
-  vat_deductable: 1,
-  engine_power: 103,
-  color: 1,
-  color_type: 1,
-  euro: 5,
-  handicaped: 0,
-  tunning: 0,
-  crashed: 0,
-  airbag: 7,
-  aircondition: 4,
-  gearbox: 1,
-  gearbox_level: 6,
-  doors: 5,
-  capacity: 5,
-  note: 'The reference data helps you to find feasible values for our enum or set datatypes.',
-  type_info: 'Combi Outdoor 2.0 TDI 4x4',
-  price_notice: 'AKCE!!! Nový vůz na objednávku, dodání do 12 týdnů. Model: Ambition Možnost záruky až na 5 let bez omezení km.',
-  description: 'Design Outdoor: dekorativní ochranné prvky ve spodní části vozidla, ochranné lišty kolem předních a zadních blatníků, ochranné prvky na předním a zadním nárazníku.',
-  made_date: '2014-03',
-  run_date: '2014-03'
-};
-
-// (async () => {
-//   const api = new SautoApi(config, login, password, swKey)
-//   await api.login()
-//   const res = await api.addEditCar(car)
-//   await api.logout()
-//   console.log(res)
-// })()
