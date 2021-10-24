@@ -1,8 +1,9 @@
 import SautoApi from '../src/index'
 import { expect } from 'chai'
-//import fs from 'fs';
+import CAR from './data/car'
+import fs from 'fs';
 
-var login = 'import',
+const login = 'import',
   password = 'test',
   swKey = 'testkey-571769',
   config = {
@@ -11,136 +12,101 @@ var login = 'import',
     "path": "/RPC2"
   };
 
-var api = new SautoApi(config, login, password, swKey);
+const api = new SautoApi(config, login, password, swKey);
+let car = CAR as any
 
 describe('Sauto API tests', function () {
 
   this.timeout(10000);
 
 
-  describe('without login', function () {
+  describe('without login', () => {
 
-    it('should print version', function () {
-
-      api
-        .version()
-        .then(function (version) {
-          expect(version).to.be.a('string');
-        })
-    });
+    it('should print version', async () => api
+      .version()
+      .then((version) => {
+        expect(version).to.be.a('string');
+      }));
 
 
-    it('should login and logout', function () {
+    it('should login and logout', async () => {
 
-      api
-        .login()
-        .then(function () {
-          return api.logout()
-        })
+      await api.login();
+      return api.logout();
     });
 
   });
 
-  describe('logged', function () {
+  describe('logged', () => {
 
-    before(async function () {
-      return api
-        .login()
-    })
-    after(async function () {
-      return api
-        .logout()
-    });
+    before(async () => api
+      .login());
+    after(async () => api
+      .logout());
 
 
-    it('should get list of cars', function () {
-      api
-        .listOfCars()
-        .then(function (ids) {
-          expect(ids).to.be.instanceOf(Array);
-        })
-    });
+    it('should get list of cars', async () => api
+      .listOfCars()
+      .then((ids) => {
+        expect(ids).to.be.instanceOf(Array);
+      }));
 
 
     // TODO: implement...
+    describe('car manipulation', () => {
 
-    describe('car manipulation', function () {
+      let carId, equips = [3, 4, 6, 7, 8];
 
-      var carId,
-        car = require(__dirname + '/data/car.js'),
-        equips = [3, 4, 5, 6, 7, 8];
-
-      before(function () {
-
-        api
-          .addEditCar(car)
-          .then(function (result) {
-            expect(result.error).to.be.false;
-            expect(result.id).to.be.a('number');
-            carId = parseInt(result.id);
-          })
-      });
+      before(async () => api
+        .addEditCar(CAR)
+        .then((result) => {
+          expect(result.car_id).to.be.a('number');
+          carId = result.car_id;
+        }));
 
 
-      after(function () {
-
-        api
-          .delCar(carId)
-      });
+      after(async () => api
+        .delCar(carId));
 
 
-      it('should get a car', function () {
-
-        api
-          .getCar(carId)
-          .then(function (result) {
-            expect(result).to.be.an('Object');
-          })
-      });
+      it('should get a car', async () => api
+        .getCar(carId)
+        .then((result) => {
+          expect(result).to.be.an('Object');
+        }));
 
 
-      it('should edit car', function () {
+      it('should edit car', async () => {
 
         car.car_id = carId;
 
-        api
+        return api
           .addEditCar(car)
-          .then(function (result) {
-            expect(result.error).to.be.false;
-            expect(result.id).to.be.a('number');
-          })
+          .then((result) => {
+            expect(result.car_id).to.be.a('number');
+          });
       });
 
 
-      it('should get car id', function () {
-        var car = require(__dirname + '/data/car.js');
-
-        api
-          .getCarId(car.custom_id)
-          .then(function (result) {
-            expect(result).to.be.equal(carId);
-          })
-      });
+      it('should get car id', async () => api
+        .getCarId(car.custom_id)
+        .then((result) => {
+          expect(result).to.be.equal(carId);
+        }));
 
 
-      it('should add equipment', function () {
-
-        api
-          .addEquipment(carId, equips)
-      });
+      it('should add equipment', async () => api
+        .addEquipment(carId, equips));
 
 
-      it('should get list of equipment', function () {
-
-        api
-          .listOfEquipment(carId)
-          .then(function (result) {
-            expect(result).to.be.an('Array');
-          })
-      });
+      it('should get list of equipment', async () => api
+        .listOfEquipment(carId)
+        .then((result) => {
+          expect(result).to.be.an('Array');
+        }));
 
 
-      it('should insert new car with errors', function () {
+      it('should insert new car with errors', async () => {
 
         delete car.vin;
         delete car.custom_id;
@@ -149,137 +115,111 @@ describe('Sauto API tests', function () {
         delete car.model_id;
         delete car.manufacturer_id;
 
-        api
+        return api
           .addEditCar({})
-          .catch(function (err) {
-            expect(err.error).to.be.eql('Auto s neuplnym kind_id, manufacturer_id, model_id a body_id');
-            expect(err.id).to.be.undefined;
-          })
+          .catch((err) => {
+            console.log(err);
+            expect(err).to.be.eql('(452) Atribut \'car_data\' je povinný');
+          });
       });
 
 
-      // describe('small photos manipulation', function () {
+      describe('small photos manipulation', () => {
 
-      //   var images = ['1.jpg', '2.jpg', '3.jpg'];
+        const images = ['1.jpg', '2.jpg', '3.jpg'];
 
-      //   it('should fail', function (done) {
+        it('should fail', async () => {
 
-      //     var photos = [];
+          const photos = images.map((img, i) => {
 
-      //     images.forEach(function (img, i) {
+            const content = fs.readFileSync('./test/data/' + img);
 
-      //       var content = fs.readFileSync(__dirname + '/data/' + img);
+            const base64Image = Buffer.from(content).toString('base64');
 
-      //       var base64Image = new Buffer(content, 'binary').toString('base64');
+            return {
+              b64: Buffer.from(base64Image, 'base64'),
+              client_photo_id: img,
+              main: i + 1
+            };
+          });
 
-      //       photos.push({
-      //         b64: new Buffer(base64Image, 'base64'),
-      //         client_photo_id: img,
-      //         main: i
-      //       });
-      //     });
+          return Promise.all(photos.map(photo => api
+            .addEditPhoto(carId, photo)
+            .catch((err) => {
+              expect(err).to.eql('(412) Fotografie je v malém rozlišení');
+            })
+          )
+          );
 
+        });
 
-      //     async.each(photos, function (photo, callback) {
-
-      //       api
-      //         .addEditPhoto(carId, photo)
-      //         .catch(function (err) {
-      //           expect(err.error).to.eql('Fotografie je v malem rozliseni');
-      //           callback();
-      //         })
-      //         .done();
-
-      //     }, done);
-
-      //   });
-
-      // })
+      });
 
 
-      // describe('photo manipulation', function () {
+      describe('photo manipulation', () => {
 
-      //   var images = ['1_big.jpg', '2_big.jpg', '3_big.jpg'];
+        const images = ['1_big.jpg', '2_big.jpg', '3_big.jpg'];
 
-      //   before(function (done) {
+        before(async () => {
 
-      //     var photos = [];
+          const photos = images.map((img, i) => {
 
-      //     images.forEach(function (img, i) {
+            const content = fs.readFileSync('./test/data/' + img);
 
-      //       var content = fs.readFileSync(__dirname + '/data/' + img);
+            const base64Image = Buffer.from(content).toString('base64');
 
-      //       var base64Image = new Buffer(content, 'binary').toString('base64');
+            return {
+              b64: Buffer.from(base64Image, 'base64'),
+              client_photo_id: img,
+              main: i + 1
+            };
+          });
 
-      //       photos.push({
-      //         b64: new Buffer(base64Image, 'base64'),
-      //         client_photo_id: img,
-      //         main: i
-      //       });
-      //     });
-
-
-      //     async.each(photos, function (photo, callback) {
-
-      //       api
-      //         .addEditPhoto(carId, photo)
-      //         .then(function (result) {
-      //           callback();
-      //         }, callback)
-      //         .done();
-
-      //     }, done);
-
-      //   });
+          await api.addEditPhoto(carId, photos[0])
+          await api.addEditPhoto(carId, photos[1])         
+          return api.addEditPhoto(carId, photos[2])
+        });
 
 
-      //   it('should get list of photos', function () {
-
-      //     api
-      //       .listOfPhotos(carId)
-      //       .then(function (result) {
-      //         expect(result).to.be.an('Array');
-      //       })
-      //   });
+        it('should get list of photos', async () => api
+          .listOfPhotos(carId)
+          .then((result) => {
+            expect(result).to.be.an('Array');
+          }));
 
 
-      //   it('should get photo id', function () {
-
-      //     api
-      //       .getPhotoId(carId, images[0])
-      //       .then(function (result) {
-      //         expect(result).to.be.a('number');
-      //       })
-      //   });
+        it('should get photo id', async () => api
+          .getPhotoId(carId, images[0])
+          .then((result) => {
+            expect(result).to.be.a('number');
+          }));
 
 
-      //   describe('delete photo', function () {
+        describe('delete photo', () => {
 
-      //     var photoId;
+          let photoId;
 
-      //     before('should get photo id', function () {
-
-      //       api
-      //         .getPhotoId(carId, images[0])
-      //         .then(function (result) {
-      //           photoId = result;
-      //         })
-      //     });
+          before('should get photo id', async () => api
+            .getPhotoId(carId, images[0])
+            .then((result) => {
+              photoId = result;
+            }));
 
 
-      //     it('should delete photo', function () {
+          it('should delete photo', async () => api
+            .delPhoto(photoId));
+        });
+      });
 
-      //       api
-      //         .delPhoto(photoId)
-      //     });
+      describe('replies', () => {
 
-      //   });
-      // });
+        it('should get replies', async () => 
+          api.
+          getReplies({car_id: carId}, 0, 0)
+          .then((result) => {
+          expect(result).to.be.an('Array');
+        }));
+      });
     });
-
-
   });
-
-
 });
-

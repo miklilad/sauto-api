@@ -9,16 +9,19 @@ export type ClientOptions = {
   method?: string | undefined;
 }
 
-export type SautoResponse = {
-  status: number,
-  status_message: string,
+export type PossibleErrorResponse = {
+  error?: string,
 }
 
-export type SautoHash = SautoResponse & {
-  output: {
-    hash_key: string,
-    session_id: string,
-  }
+export type Hash = PossibleErrorResponse & {
+  hash_key: string,
+  session_id: string,
+}
+
+export type RepliesFiltter = {
+  car_id?: number,
+  date_from?: string,
+  date_to?: string,
 }
 
 // export type CarData = {
